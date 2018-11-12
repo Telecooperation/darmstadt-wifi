@@ -1,6 +1,14 @@
 # darmstadt-wifi
 WiFi Access Points Crawl of Darmstadt, Germany
 
+
+## Repository Contents
+* ``WifiAnalyzer`` A modified version of the WifiAnalyzer app for Android that writes scan results to a file
+* ``Ruby`` Ruby script that parses raw Wifi scans, performs a MAC vendor lookup and estimates the position of access points from multiple measurements
+* ``complete_raw.csv`` Raw database dump of the Darmstadt crawl 
+* ``complete.csv`` Database dump with WGS84/GPS coordinates of access point locations
+
+
 ## Publications
 When re-using the data, please consider citing the following publications:
 
