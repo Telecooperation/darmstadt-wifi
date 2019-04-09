@@ -1,5 +1,4 @@
 require 'find'
-require 'open-uri'
 require 'highline/import'
 require_relative 'accesspoint'
 
@@ -19,24 +18,10 @@ def find_access_point(bssid)
   return false
 end
 
+
 def mac_lookup(macaddr)
   puts "Performing vendor lookup on MAC " + macaddr if $verbose
   return $vendors[macaddr[0..7].upcase] if $vendors.key?(macaddr[0..7].upcase)
-  res = ""
-  begin
-   open "http://api.macvendors.com/#{macaddr}" do |vendor|
-     res = vendor.read if vendor.status.first == '200'
-   end
-   File.open("macvendors.txt", 'a') { |f|
-     f.puts macaddr[0..7].upcase + ";" + res.to_s
-   }
-    return res
-  rescue => e
-   File.open("macvendors.txt", 'a') { |f|
-     f.puts macaddr[0..7].upcase + ";" + "NULL"
-   }
-    'null'
-  end
 end
 
 
@@ -52,23 +37,16 @@ loop { case ARGV[0]
         else break
 end; }
 
-	if (!$inputdir || !$outputfile )
-		puts "Usage: ruby import.rb -d InputDirectory -o OutputFile [-k KnownAPsList -v Verbose]"
-		exit
-	end
+    if (!$inputdir || !$outputfile )
+	puts "Usage: ruby import.rb -d InputDirectory -o OutputFile [-v Verbose]"
+	exit
+    end
 
     File.delete($outputfile) if File.exist?($outputfile)
 
     File.open("macvendors.txt").each do |line|
       macrange,vendor = line.split(";",2)
       $vendors[macrange.gsub('-',':')] = vendor[0..-2]
-    end
-
-    if ($knownAPs && File.exist?($knownAPs))
-      File.open($knownAPs).each do |line|
-        bssid = line[1...-1]
-        $already_known_aps << bssid unless $already_known_aps.include?(bssid)
-      end
     end
 
     filesToParse = []
@@ -93,10 +71,6 @@ end; }
           if $vendor_blacklist.include?(vendor)
             next
           end
-          if $already_known_aps.include?(bssid)
-            $num_already_known += 1
-            next
-          end
           $access_points << AccessPoint.new(bssid,ssid,vendor,frequency,caps,security,timestamp,lat,long,signalstrength,distance)
           puts $access_points[find_access_point(bssid)] if $verbose
         else
@@ -108,22 +82,21 @@ end; }
     puts "-------------------------------------------------------"
     puts "Importing Done!"
     puts "\nAnalyzing positions..."
-
+    inserts = 0
     $access_points.each do |ap|
-      puts ap.bssid + " - " + ap.ssid
       res = ap.estimatePosition
-      puts res
       unless res == false || res==nil
         insert_string = "INSERT INTO filtered_wardriving (ssid,bssid,encryption,vendor,timestamp, location) VALUES
       ('#{ap.ssid}', '#{ap.bssid}', '#{ap.caps}', '#{ap.vendor}',
         '#{Time.now.getutc}',
         ST_SetSRID(ST_MakePoint(#{res[1]},#{res[0]}),4326));"
-        puts "Insert String: " + insert_string
+        puts "Inserting SQL-String: " + insert_string if $vernose
+        inserts += 1
         File.open($outputfile, 'a+') { |file| file.puts(insert_string) }
       end
     end
     puts "-------------------------------------------------------"
-    puts "Done!"
+    puts "Done! Written " + inserts.to_s + " inserts to " + $outputfile.to_s 
 end
 
 main

@@ -15,6 +15,6 @@ def distance(lat1,long1,lat2,long2)
   a = (Math::sin(dlat/2)** 2) + Math::cos(rlat1) * Math::cos(rlat2) * (Math::sin(dlon/2)**2)
   c = 2 * Math::atan2(Math::sqrt(a), Math::sqrt(1-a))
   d = r * c
-  puts "\tDistance function: lat1=#{lat1}, long1=#{long1}, lat2=#{lat2}, long2=#{long2} => Distance: " + d.to_s if $verbose
+  puts "\t\tDistance function: lat1=#{lat1}, long1=#{long1}, lat2=#{lat2}, long2=#{long2} => Distance: " + d.to_s if $verbose
   d
 end

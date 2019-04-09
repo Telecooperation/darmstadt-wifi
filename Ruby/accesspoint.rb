@@ -61,17 +61,20 @@ class AccessPoint
       lat = latlong.lat
       long = latlong.lon
       if distance(lat,long, avglat, avglong) > 10
-        puts "\tAvg dist ok" if $verbose
+        puts "\t\t->Avg dist ok" if $verbose
         newmm << mm
       else
-        puts "\tAvg dist too small" if $verbose
+        puts "\t\t->Avg dist too small" if $verbose
       end
     end
 
     @measurement = newmm
     numOfMeasurementPoints = @measurement.size
-    return nil if numOfMeasurementPoints == 0
-    puts "\New Number of measurements: " + numOfMeasurementPoints.to_s if $verbose
+    if numOfMeasurementPoints == 0
+      puts "\tnumber of measurements is zero!" if $verbose
+      return nil
+    end
+    puts "\tNew Number of measurements: " + numOfMeasurementPoints.to_s if $verbose
 
     delta = [0.0,0.0]
     alpha = @alpha
@@ -94,11 +97,12 @@ class AccessPoint
     end
     utm_coordinate = GeoUtm::UTM.new('32U', res[0], res[1], ellipsoid = GeoUtm::Ellipsoid::WGS84)
     latlong = utm_coordinate.to_lat_lon
+    puts "\tResulting estimate: " + latlong.lat.to_s + "," + latlong.lon.to_s if $verbose
     return latlong.lat.to_s, latlong.lon.to_s
   end
 
   def to_s
-    puts "Hello I am access point " + @bssid + " - " + @ssid + " - " + @vendor
-    puts "Current measurements are: " + @measurement.to_s + " - " + @measurement.length.to_s
+    puts "Hello, I am access point " + @bssid + " - " + @ssid + " - " + @vendor
+    puts "Current measurements are: " + @measurement.to_s + " - Number of measurements:" + @measurement.length.to_s
   end
 end
